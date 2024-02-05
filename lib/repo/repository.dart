@@ -66,6 +66,8 @@ class Repository extends ChangeNotifier {
         backgroundColor: Colors.red,
       );
     } else {
+      isLoading = true;
+      notifyListeners();
       connectToServer().then((_) {
         log("Device connected to Internet!");
         Fluttertoast.showToast(
@@ -73,6 +75,7 @@ class Repository extends ChangeNotifier {
           toastLength: Toast.LENGTH_LONG,
           backgroundColor: Colors.lightGreen,
         );
+        isLoading = false;
         notifyListeners();
       });
     }
@@ -131,6 +134,8 @@ class Repository extends ChangeNotifier {
     await pullDBChanges();
     log("Remote changes were pull from the server!");
     log("Syncing finished!");
+
+    notifyListeners();
   }
 
   Future<void> pushDBChanges() async {
@@ -139,6 +144,7 @@ class Repository extends ChangeNotifier {
 
     // push items to the server TODO
     for (final item in items) {
+      // create request
       final requestBody = {
         "name": item.name,
         "organizer": "mathe",
@@ -146,6 +152,13 @@ class Repository extends ChangeNotifier {
         "capacity": 10,
         "registered": 0,
       };
+
+      // delete item
+      realm.write(() {
+        realm.delete(item);
+      });
+
+      // sent request
       await http.post(
         Uri.parse("$SERVER_HTTP/event"),
         body: jsonEncode(requestBody),
@@ -218,12 +231,15 @@ class Repository extends ChangeNotifier {
         }
       } else {
         // find maximum id
-        final maxId = data.reduce((value, item) {
-          if (value.id > item.id) {
-            return value;
-          }
-          return item;
-        }).id;
+        var maxId = 0;
+        if (!data.isEmpty) {
+          data.reduce((value, item) {
+            if (value.id > item.id) {
+              return value;
+            }
+            return item;
+          }).id;
+        }
 
         // add item to local db
         var item = Model(maxId + 1, name);

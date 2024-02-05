@@ -18,7 +18,12 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget buildActionButton(BuildContext context) {
+  Widget? buildActionButton(BuildContext context) {
+    final repo = Provider.of<Repository>(context);
+    if (repo.isLoading) {
+      return null;
+    }
+
     return FloatingActionButton(
       onPressed: () => context.pushNamed(Routes.create.name),
       tooltip: "Create",
@@ -78,10 +83,11 @@ class HomePage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Device is not connected to Internet!"),
+                  const Text("Device could not reach the server!"),
+                  const SizedBox(height: 15.0),
                   FilledButton(
                     onPressed: () => repo.reconnectToServer(),
-                    child: const Text("Retry"),
+                    child: const Text("Try again!"),
                   ),
                 ],
               ),
