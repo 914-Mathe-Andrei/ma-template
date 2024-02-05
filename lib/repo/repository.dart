@@ -66,13 +66,15 @@ class Repository extends ChangeNotifier {
         backgroundColor: Colors.red,
       );
     } else {
-      log("Device connected to Internet!");
-      Fluttertoast.showToast(
-        msg: "Connected to Internet",
-        toastLength: Toast.LENGTH_LONG,
-        backgroundColor: Colors.lightGreen,
-      );
-      connectToServer();
+      connectToServer().then((_) {
+        log("Device connected to Internet!");
+        Fluttertoast.showToast(
+          msg: "Connected to Internet",
+          toastLength: Toast.LENGTH_LONG,
+          backgroundColor: Colors.lightGreen,
+        );
+        notifyListeners();
+      });
     }
   }
 
@@ -129,8 +131,6 @@ class Repository extends ChangeNotifier {
     await pullDBChanges();
     log("Remote changes were pull from the server!");
     log("Syncing finished!");
-
-    notifyListeners();
   }
 
   Future<void> pushDBChanges() async {
@@ -183,7 +183,7 @@ class Repository extends ChangeNotifier {
       realm.add(item);
     });
 
-    // log("The received item with id ${item.id} was added to the local db");
+    log("Created item with id ${item.id}");
     notifyListeners();
   }
 
@@ -197,8 +197,6 @@ class Repository extends ChangeNotifier {
 
     // TODO
     try {
-      int id; // id of the new item
-
       if (isConnected) {
         final requestBody = {
           "name": name,
@@ -207,13 +205,17 @@ class Repository extends ChangeNotifier {
           "capacity": 10,
           "registered": 0,
         };
-        final responseBody = await http.post(
+        final response = await http.post(
           Uri.parse("$SERVER_HTTP/event"),
           body: jsonEncode(requestBody),
           headers: {"Content-Type": "application/json"},
-        ).then((response) => jsonDecode(response.body));
+        );
+        final responseBody = jsonDecode(response.body);
+        log(requestBody.toString());
 
-        id = responseBody["id"];
+        if (response.statusCode == 404) {
+          throw ExamAppException(responseBody["text"]);
+        }
       } else {
         // find maximum id
         final maxId = data.reduce((value, item) {
@@ -223,26 +225,26 @@ class Repository extends ChangeNotifier {
           return item;
         }).id;
 
-        // assign id
-        id = maxId + 1;
-
         // add item to local db
-        var item = Model(id, name);
+        var item = Model(maxId + 1, name);
         realm.write(() {
           realm.add(item);
         });
 
         // mark the new item as out of sync
         dataOutOfSync.add(item.id);
-      }
 
-      log("Created item with id $id");
+        log("Created item with id ${item.id}");
+      }
     } on RealmException catch (e) {
       log("ExamAppException: Item could not be created! The following error was thrown: $e");
       throw ExamAppException("Item could not be created!");
     } on http.ClientException catch (e) {
       log("ExamAppException: Item could not be created! The following error was thrown: $e");
       throw ExamAppException("Item could not be created!");
+    } on ExamAppException catch (e) {
+      log("ExamAppException: Item could not be created! The following error was thrown: $e");
+      throw ExamAppException("$e");
     } finally {
       isLoading = false;
       notifyListeners();
@@ -273,11 +275,17 @@ class Repository extends ChangeNotifier {
         "capacity": 10,
         "registered": 0,
       };
-      await http.put(
+      final response = await http.put(
         Uri.parse("$SERVER_HTTP/event"),
         body: jsonEncode(requestBody),
         headers: {"Content-Type": "application/json"},
-      ).then((response) => log(response.body));
+      );
+      final responseBody = jsonDecode(response.body);
+      log(requestBody.toString());
+
+      if (response.statusCode == 404) {
+        throw ExamAppException(responseBody["text"]);
+      }
 
       realm.write(() {
         item.name = name;
@@ -290,6 +298,9 @@ class Repository extends ChangeNotifier {
     } on http.ClientException catch (e) {
       log("ExamAppException: Item could not be updated! The following error was thrown: $e");
       throw ExamAppException("Item could not be updated!");
+    } on ExamAppException catch (e) {
+      log("ExamAppException: Item could not be updated! The following error was thrown: $e");
+      throw ExamAppException("$e");
     } finally {
       isLoading = false;
       notifyListeners();
@@ -313,7 +324,13 @@ class Repository extends ChangeNotifier {
 
     // delete item TODO
     try {
-      await http.delete(Uri.parse("$SERVER_HTTP/event")).then((response) => log(response.body));
+      final response = await http.delete(Uri.parse("$SERVER_HTTP/event"));
+      final responseBody = jsonDecode(response.body);
+      log(responseBody.toString());
+
+      if (response.statusCode == 404) {
+        throw ExamAppException(responseBody["text"]);
+      }
 
       realm.write(() {
         realm.delete(item);
@@ -326,6 +343,9 @@ class Repository extends ChangeNotifier {
     } on http.ClientException catch (e) {
       log("ExamAppException: Item could not be deleted! The following error was thrown: $e");
       throw ExamAppException("Item could not be deleted!");
+    } on ExamAppException catch (e) {
+      log("ExamAppException: Item could not be deleted! The following error was thrown: $e");
+      throw ExamAppException("$e");
     } finally {
       isLoading = false;
       notifyListeners();

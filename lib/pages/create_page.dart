@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -19,6 +20,7 @@ class _CreatePage extends State<CreatePage> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController(text: "");
   final TextEditingController dateController = TextEditingController(text: DateFormat(DATETIME_FORMAT).format(DateTime.now()));
+  final TextEditingController numberController = TextEditingController(text: "0");
 
   Future<bool> createItem() async {
     if (!formKey.currentState!.validate()) {
@@ -28,6 +30,7 @@ class _CreatePage extends State<CreatePage> {
     // TODO
     String name = nameController.text;
     String date = dateController.text;
+    int number = int.parse(numberController.text);
 
     try {
       final repo = Provider.of<Repository>(context, listen: false);
@@ -74,7 +77,9 @@ class _CreatePage extends State<CreatePage> {
     return Consumer<Repository>(
       builder: (context, repo, child) {
         if (repo.isLoading) {
-          return const LinearProgressIndicator();
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
         }
 
         return Container(
@@ -107,6 +112,24 @@ class _CreatePage extends State<CreatePage> {
                       dateController.text =
                           DateFormat(DATETIME_FORMAT).format(dateTime);
                     }
+                  },
+                ),
+                const SizedBox(height: 5.0),
+                TextFormField(
+                  controller: numberController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Number",
+                    suffixIcon: Icon(Icons.numbers),
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Field cannot be empty!";
+                    }
+                    return null;
                   },
                 ),
               ],

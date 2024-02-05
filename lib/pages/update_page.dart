@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -22,11 +23,13 @@ class _UpdatePage extends State<UpdatePage> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   late final TextEditingController nameController;
   late final TextEditingController dateController;
+  late final TextEditingController numberController;
 
   @override
   initState() {
     nameController = TextEditingController(text: widget.item.name);
     dateController = TextEditingController(text: DateFormat(DATETIME_FORMAT).format(DateTime.now()));
+    numberController = TextEditingController(text: "0");
 
     super.initState();
   }
@@ -39,6 +42,7 @@ class _UpdatePage extends State<UpdatePage> {
     // TODO
     String name = nameController.text;
     String date = dateController.text;
+    int number = int.parse(numberController.text);
 
     try {
       final repo = Provider.of<Repository>(context, listen: false);
@@ -85,7 +89,9 @@ class _UpdatePage extends State<UpdatePage> {
     return Consumer<Repository>(
       builder: (context, repo, child) {
         if (repo.isLoading) {
-          return const LinearProgressIndicator();
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
         }
 
         return Container(
@@ -109,7 +115,7 @@ class _UpdatePage extends State<UpdatePage> {
                 TextFormField(
                   controller: dateController,
                   decoration: const InputDecoration(
-                    labelText: "Name",
+                    labelText: "Date",
                     suffixIcon: Icon(Icons.calendar_month),
                   ),
                   onTap: () async {
@@ -118,6 +124,24 @@ class _UpdatePage extends State<UpdatePage> {
                       dateController.text =
                           DateFormat(DATETIME_FORMAT).format(dateTime);
                     }
+                  },
+                ),
+                const SizedBox(height: 5.0),
+                TextFormField(
+                  controller: numberController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Number",
+                    suffixIcon: Icon(Icons.numbers),
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Field cannot be empty!";
+                    }
+                    return null;
                   },
                 ),
               ],

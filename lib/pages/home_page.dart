@@ -68,7 +68,9 @@ class HomePage extends StatelessWidget {
       child: Consumer<Repository>(
         builder: (context, repo, child) {
           if (repo.isLoading) {
-            return const LinearProgressIndicator();
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
           }
 
           if (!repo.isConnected && repo.data.isEmpty) {
