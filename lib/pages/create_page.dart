@@ -98,7 +98,7 @@ class _CreatePage extends State<CreatePage> {
                 TextFormField(
                   controller: dateController,
                   decoration: const InputDecoration(
-                    labelText: "Name",
+                    labelText: "Date",
                     suffixIcon: Icon(Icons.calendar_month),
                   ),
                   onTap: () async {
@@ -120,7 +120,7 @@ class _CreatePage extends State<CreatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: buildAppBar(context, title: "Add item"),
+      appBar: buildAppBar(context, title: "Create item"),
       body: buildBody(context),
       bottomNavigationBar: buildBottomBar(context),
     );

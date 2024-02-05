@@ -25,3 +25,6 @@ samples, guidance on mobile development, and a full API reference.
 - [Flutter Toast](https://pub.dev/packages/fluttertoast)
 - [Intl (date & time)](https://pub.dev/packages/intl)
 - [Shared Preferences](https://pub.dev/packages/shared_preferences)
+
+## IMPORTANT!!!
+> Install the packages from pubspec.yaml using : ```flutter pub get```

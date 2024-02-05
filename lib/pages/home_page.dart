@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Future<bool> openDeleteDialog(BuildContext context) async {
+  Future<bool> openDialog(BuildContext context) async {
     return await showDialog(
       context: context,
       barrierDismissible: false,
@@ -55,7 +55,7 @@ class HomePage extends StatelessWidget {
       item: item,
       itemBuilder: (context, child) {
         return GestureDetector(
-          // onTap: () => openDeleteDialog(context), TODO
+          // onTap: () => openDialog(context), TODO
           onTap: () => context.pushNamed(Routes.detail.name, pathParameters: {"id": item.id.toString()}),
           child: child,
         );
